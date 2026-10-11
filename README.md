@@ -1,6 +1,14 @@
 # pi-everything (pi extension)
 
-pi extension that recreates the [CodingRookie98/everything-search](https://github.com/CodingRookie98/everything-search) skill (MIT) as native pi tools, wired directly to [Everything](https://www.voidtools.com/) via `es.exe`.
+Instant, machine-wide file search for the pi coding agent on Windows, backed by
+the [Everything](https://www.voidtools.com/) index.
+
+**Everything** is a Windows desktop search utility that indexes file and folder
+names in real time — a filename search across the whole computer returns results
+in milliseconds, with no directory walk and no waiting on a disk scan. This
+extension recreates the
+[CodingRookie98/everything-search](https://github.com/CodingRookie98/everything-search) skill (MIT) as
+native pi tools wired directly to the index via `es.exe`.
 
 ## Tools
 
@@ -11,6 +19,7 @@ pi extension that recreates the [CodingRookie98/everything-search](https://githu
 | `everything_folder_size` | Recursive folder size from the index (instant, no disk scan). Param: `path`. |
 | `everything_syntax` | Returns the bundled full query-syntax reference (`syntax.md`) — agents call it when they need syntax beyond basics. Optional `include_columns: true` also returns the full 55-name property-column allowlist. |
 | `everything_status` | Diagnostics: es.exe presence/version/path, service reachability, indexed item count, index freshness (stale-index warning). |
+
 **`everything_grep` output budget.** Output is capped at 20 KB and the scan stops as soon as the budget (or `limit`) is full — candidate files after that are not read, and the marker says so: `[everything_grep: output budget (20 KB) reached after N matches in M files. K candidate files not scanned. …]`. Match lines over 500 chars render as first 500 + `... [truncated]` (parity with the builtin grep tool, plus a footer when any line was cut); the anchor hash is always of the full line, so edits still operate on complete content. Per-file cap: once the running match total passes 50, each file renders at most 10 matches + a `... +K more matches` note. `summary: true` returns per-file counts only (the scan always completes; the budget bounds the file list).
 
 ## How agents learn the syntax
@@ -29,7 +38,8 @@ Three layers, so the agent never has to guess:
 
 ## Prerequisites (Windows)
 
-- `es.exe` (Everything CLI) in PATH — https://www.voidtools.com/downloads/#cli
+- [Everything](https://www.voidtools.com/) — [installer](https://www.voidtools.com/downloads/#everything)
+- `es.exe` (Everything CLI) in PATH — [CLI download](https://www.voidtools.com/downloads/#cli)
 - Everything service running (start `Everything.exe`)
 - Recommended Everything options (index folder size, USN journal, IPC enabled) — reference screenshots in `docs/options-screenshots/`
 - Tested against the Everything 1.5.0.1423 beta + es.exe 1.1.0.37; 1.4-era es.exe also works (automatic CSV fallback in details mode)
