@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022"],
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true
+    // Type-checking (npx tsc --noEmit) needs the pi package types. Uncomment
+    // and point "paths" at your local pi install, e.g. a global npm install:
+    // "paths": {
+    //   "@earendil-works/pi-coding-agent": ["C:/path/to/pi-coding-agent"],
+    //   "@earendil-works/pi-ai": ["C:/path/to/pi-coding-agent/node_modules/@earendil-works/pi-ai"],
+    //   "typebox": ["C:/path/to/pi-coding-agent/node_modules/typebox"]
+    // }
+  },
+  "include": ["*.ts"]
+}

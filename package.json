@@ -1,0 +1,10 @@
+{
+  "name": "pi-everything",
+  "private": true,
+  "version": "0.1.0",
+  "description": "pi extension: native Everything-index search tools for pi (Windows). Root marker for the TypeScript LSP; pi resolves extension deps from its own install via jiti.",
+  "devDependencies": {
+    "@types/node": "^22.20.2",
+    "typescript": "^7.0.2"
+  }
+}
