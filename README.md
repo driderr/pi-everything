@@ -44,6 +44,17 @@ Three layers, so the agent never has to guess:
 - Recommended Everything options (index folder size, USN journal, IPC enabled) — reference screenshots in `docs/options-screenshots/`
 - Tested against the Everything 1.5.0.1423 beta + es.exe 1.1.0.37; 1.4-era es.exe also works (automatic CSV fallback in details mode)
 
+## Install
+
+The easiest way — from npm (pi.dev gallery):
+
+```
+pi install npm:pi-everything
+```
+
+(Windows only — Everything is a Windows file index. See Prerequisites below.)
+
+The manual deploy below still works if you prefer clone-and-copy.
 ## Deploy
 
 Copy the extension files into pi's global extensions directory as its own

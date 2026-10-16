@@ -1,10 +1,44 @@
 {
   "name": "pi-everything",
-  "private": true,
   "version": "0.1.0",
-  "description": "pi extension: native Everything-index search tools for pi (Windows). Root marker for the TypeScript LSP; pi resolves extension deps from its own install via jiti.",
+  "description": "Instant machine-wide file search for the pi coding agent on Windows — native tools (search, content grep, folder size, syntax reference, status) backed by the Everything index via es.exe",
+  "keywords": [
+    "pi-package",
+    "pi",
+    "pi-coding-agent",
+    "extension",
+    "everything",
+    "file-search",
+    "search",
+    "index",
+    "windows",
+    "local-first"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/driderr/pi-everything"
+  },
+  "pi": {
+    "extensions": [
+      "./index.ts"
+    ]
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*",
+    "typebox": "*"
+  },
   "devDependencies": {
     "@types/node": "^22.20.2",
     "typescript": "^7.0.2"
-  }
+  },
+  "files": [
+    "index.ts",
+    "grep-core.ts",
+    "README.md",
+    "syntax.md",
+    "docs/",
+    "LICENSE"
+  ]
 }
