@@ -9,7 +9,7 @@ es.exe here — do not use them — and that section's last list is UNVERIFIED h
 - `space` — AND: `a b` = a AND b, whether the clauses sit inside ONE es.exe argument or across two (measured under `-argv`; root README "es.exe invocation contract"). **This tool still sends one term per argument** (`splitQueryTerms`); quote inside an argument for a phrase.
 - `|` — OR: `foo|bar`, and it binds TIGHTER than the implicit AND: the pipe joins the term on its left to
   the term on its right, and every other term applies to the whole result. Measured over a
-  405-row scope (404 `.js`, 1 `.bin`): `ancestor:"…" | *.js` = 310,463 (the join's right side ran
+  405-row scope (404 `.js`, 1 `.bin`): `ancestor:"…" | *.js` = 321,245 (the join's right side ran
   unscaled), while `ancestor:"…" *.js | *.bin` = 405 and `*.js | *.bin ancestor:"…"` = 405 — the scope sits
   outside the join there, so it limits both sides. A DUPLICATED term limits it the same way, because the copy
   is one of those outside terms: `ancestor:"…" ancestor:"…" | *.js` = 405 — the join
@@ -17,7 +17,7 @@ es.exe here — do not use them — and that section's last list is UNVERIFIED h
   A `<...>` group is ONE term on its side of the
   join: `ancestor:"…" <*.bin> | *.js` = 405. An orphan `|` degenerates the join and DROPS its neighbour — the
   term BEFORE a trailing pipe, the term AFTER a leading one: `ancestor:"…" *.js |` = 405 (the whole scope) where
-  `ancestor:"…" *.js` = 404, while `| ancestor:"…" *.js` = 310,463 (every `.js` on the index) and the mirror
+  `ancestor:"…" *.js` = 404, while `| ancestor:"…" *.js` = 321,245 (every `.js` on the index) and the mirror
   `| *.js ancestor:"…"` = 405 (`-regex` takes a leading `|` as the pattern instead). If the drop removed the last term nothing limits the answer:
   `ancestor:"…" |`, `*.js |`, `| *.js`, a lone `|` and an empty query each answer the entire index.
   Orphan pipes CASCADE: `| ancestor:"…" | *.bin` lost BOTH terms and answered 3,777,897 where
@@ -99,7 +99,7 @@ Everything version: use a macro for a coarse sweep, `ext:` when the set matters.
   argument, so only the FIRST term is a pattern and the rest stay ordinary searches (`-regex plain` with a
   second term `(plain)` = 1 row, the intersection, where the group alone = 2). A `|` among those later terms
   is still Everything's OR and still leaks an unscoped side: `-regex "." -- ancestor:"…answertrim" | *.js`
-  counted 310,464, the same query with no regex at all (one index row of drift), while the same terms without the `|` counted
+  counted 310,464, the same query with no regex at all (read 2026-11-04), while the same terms without the `|` counted
   404. `everything_grep` has no `regex` parameter at all, so for that tool the in-query form is the only way
   to ask for regex grammar: a grep call that passed `regex: true` had it ignored, and
   the query reached the engine unchanged. A pattern argument that LOOKS like a function is parsed as that

@@ -1815,8 +1815,9 @@ function metadataNotAskedBody(skip: ScanSkip): string {
       + extraColumnsSentence(skip.columns, " And ")
       + " What DOES answer: a place term beside it - `ancestor:`, `parent:`, or an absolute `path:` (0 rows in "
       + "105-616 ms) - or a term that matches FEW files: `latitude:47 ext:mp3` counted 0 in 61 ms because "
-      + "`ext:mp3` is only 167 rows, while a broad partner does not rescue it (`ext:png` 68,637, `ext:mjs` "
-      + "116,240, `*.dll` 113,781 and `size:>1kb` 2,274,644 - all four round 70's run, 2026-11-05 - were every "
+      + "`ext:mp3` is only 167 rows, while a broad partner does not rescue it (`ext:mjs` 121,846 "
+      + "re-counted 2026-11-07, and `ext:png` 68,637, `*.dll` 113,781 and `size:>1kb` 2,274,644 - those "
+      + "three round 70's run, 2026-11-05 - were every "
       + "one silent beside these functions; how "
       + "small is small enough is not measured, so a query that DOES name a partner stays on the normal leash). "
       + "This call asked neither -get-result-count nor -get-total-size - this is not a timeout.";
@@ -4646,14 +4647,14 @@ export function orScopeNote(query: string, patternIndex = -1): string {
     return `\n[everything_search: "|" joins ONLY the two terms it touches and every other term applies to ` +
       `the whole result, so ${boundedEcho(unscoped)} is not limited by the term it is joined to. Nothing inside the join ` +
       `bounds it either; whether the ANSWER comes back index-wide depends on the terms OUTSIDE the join, ` +
-      `which do apply to the whole result (measured 2026-11-04: ` +
+      `which do apply to the whole result (measured 2026-11-07: ` +
       `ancestor:"C:\\tmp\\esq-e2e-fixtures\\answertrim" | *.js ` +
-      `answered 310,463 rows, while ancestor:"…answertrim" *.js | *.bin - one scope outside the join - ` +
+      `answered 321,245 rows, while ancestor:"…answertrim" *.js | *.bin - one scope outside the join - ` +
       `answered 405, and a duplicated scope did the same: ancestor:"…answertrim" ancestor:"…answertrim" | ` +
       `*.js = 405), so a small count is not evidence that the join was scoped correctly. Move the ` +
       `scope term out of the join by grouping the alternatives with <...> and NO parentheses: ` +
       `ancestor:"C:\\proj" <*.js | *.bin> = 405. Parentheses are literal name characters here, so <(A | B)> ` +
-      `asks for names holding "(A" or "B)" and answers 0 where the same group written without them answers 39,295.` +
+      `asks for names holding "(A" or "B)" and answers 0 where the same group written without them answers 39,693.` +
       (parenGlued
         ? ` And the scope term in this query is itself wrapped in parentheses, which Everything matches as `
           + `literal name characters, so it scopes nothing at all: (ancestor:"…answertrim") answered 0 rows ` +
