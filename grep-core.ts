@@ -2,7 +2,8 @@
  * grep-core — content-scan and hashline-anchor helpers for `everything_grep`.
  *
  * Anchor output MUST be byte-identical to pi-hashline-readmap's computeLineHash
- * (xxh32 of the whitespace-stripped line, seed 0; 3-hex-char of value % 4096),
+ * (xxh32 of the RAW line — whitespace significant, pi-hashline-readmap >= 0.15.0;
+ * seed 0; 3-hex-char of value % 4096) — so these anchors feed the edit tool.
  * so these anchors feed straight into the hashline-anchored edit tool.
  *
  * xxhash-wasm is NOT importable from the extension directory (pi's jiti loader
@@ -96,14 +97,16 @@ const DICT: string[] = Array.from({ length: HASH_MOD }, (_, i) =>
 const textEncoder = new TextEncoder();
 
 /**
- * 3-char anchor for one source line: xxh32 (seed 0) of the line with ALL
- * whitespace removed, modulo 4096, as zero-padded lowercase hex. A trailing
- * CR is stripped first. The line number does NOT enter the hash.
+ * 3-char anchor for one source line: xxh32 (seed 0) of the RAW line — whitespace
+ * is significant — modulo 4096, as zero-padded lowercase hex. One trailing CR is
+ * stripped first. The line number does NOT enter the hash. This matches
+ * pi-hashline-readmap >= 0.15.0 (src/hashline.ts `computeLineHash`); the
+ * pre-0.15.0 oracle hashed the whitespace-stripped line, which silently produced
+ * anchors the edit tool rejects for any indented line.
  */
 export function computeLineHash(_lineNumber: number, line: string): string {
   if (line.endsWith("\r")) line = line.slice(0, -1);
-  const stripped = line.replace(/\s+/g, "");
-  return DICT[xxh32(textEncoder.encode(stripped), 0) % HASH_MOD];
+  return DICT[xxh32(textEncoder.encode(line), 0) % HASH_MOD];
 }
 
 /**
@@ -132,21 +135,67 @@ export function escapeControlCharsForDisplay(text: string): string {
   });
 }
 
-// ─── Binary detection (same strategy as pi-hashline-readmap) ────────────────
+// ─── Binary detection and decoding (scan path) ───────────────────────────
+//
+// pi's own rule (pi-hashline-readmap `binary-detect.ts`, which this file vendored verbatim
+// as `looksLikeBinary` until 2026-11-04) is: a NUL byte, OR a U+FFFD the decoder introduced
+// (invalid UTF-8 — a genuine EF BF BD survives the round-trip, so it is not flagged). pi
+// applies THAT predicate to the single-target warning ("appears to be a binary file — grep
+// skips", grep.ts:498-505) and to edit guards, and NOT to a directory scan: the scan goes
+// through pi-core's native ripgrep engine, whose binary rule is NUL-based and whose reader
+// transcodes a UTF-16 BOM.
+//
+// Measured on this box (2026-11-04, an 8-file corpus with one ASCII token in each): pi's
+// scan matched utf8, utf8+BOM, utf16le+BOM, utf16be+BOM, latin1 and CP-125x-ANSI — 6 of 8 —
+// and missed utf16-without-BOM plus the NUL-bearing file; pointed at latin1.txt ALONE, pi
+// printed the binary warning instead. Our code applied the WARNING predicate to every
+// scanned file, so we reported 2 matches where pi's scan reported 6: a silently short answer
+// (round 9 R-1/R-2).
+//
+// `decodeForScan` below therefore follows the SCAN rule. The vendored predicate is
+// deliberately deleted rather than kept for parity: reaching for it is how the wrong path
+// got it, and we do not reproduce pi's lone-invalid-UTF-8-file warning (README decision
+// list) — telling an agent a file it can search is "binary, use a hex tool" is worse than a
+// documented divergence.
+
+export type ScanDecode =
+  | { kind: "text"; text: string; transcoded: boolean }
+  | { kind: "binary"; reason: "nul" };
 
 /**
- * True if the buffer appears to contain binary (non-text) content:
- *   1. NUL byte (0x00) — universally indicates binary
- *   2. U+FFFD that did not exist in the original bytes (decoder-introduced,
- *      i.e. invalid UTF-8 sequences — a valid EF BF BD in the file survives
- *      the round-trip and is not treated as binary)
+ * Decode a candidate file for scanning, deciding text-vs-binary the way pi's scan
+ * engine does. Order matters: a UTF-16 BOM is checked FIRST, because ASCII text in
+ * UTF-16 is full of 0x00 bytes and would otherwise be classified binary by the NUL rule
+ * (measured: pi's scan reads both BOM'd UTF-16 files fine, and only skips the file whose
+ * NULs are genuine). Then a NUL anywhere means binary, and everything else decodes as
+ * UTF-8 with replacement characters, so an ASCII/UTF-8 pattern still matches inside a
+ * Latin-1 or CP-125x file instead of the file being skipped. Line numbers are computed
+ * on this decoded text - the same text the reference renders.
+ *
+ * `transcoded` marks the UTF-16 paths, and it decides whether a rendered row may carry a
+ * LINE:HASH anchor. pi's read tool does NOT transcode UTF-16: measured 2026-11-04 it shows the
+ * raw NUL-interleaved text and hashes THAT (suite fixture utf16le.txt line 2 = 795, case 14), while the
+ * decoded line we
+ * search hashes 3fb. An anchor on a transcoded row is therefore a hash no other pi tool agrees
+ * with, so those rows print anchor-less - which is also how pi's own grep renders them. Invalid
+ * UTF-8 is NOT transcoded: pi's read decodes it to the same replacement-char string we do, so
+ * those rows keep their anchors (suite fixtures latin1.txt line 2 = f14 and ansi-greek.txt line 2 = 1e6,
+ * case 14, same
+ * from our grep and from pi's read).
  */
-export function looksLikeBinary(buf: Buffer): boolean {
-  if (buf.length === 0) return false;
-  if (buf.includes(0)) return true;
-  const decoded = buf.toString("utf8");
-  if (!decoded.includes("\uFFFD")) return false;
-  return !Buffer.from(decoded, "utf8").equals(buf);
+export function decodeForScan(buf: Buffer): ScanDecode {
+  const bomLe = buf.length >= 2 && buf[0] === 0xff && buf[1] === 0xfe;
+  const bomBe = buf.length >= 2 && buf[0] === 0xfe && buf[1] === 0xff;
+  if (bomLe || bomBe) {
+    // Node only decodes UTF-16LE, so BE is byte-swapped first. swap16() throws on an odd
+    // length, so a truncated trailing byte is dropped rather than crashing the scan.
+    const body = Buffer.from(buf.subarray(2));
+    const view = body.subarray(0, body.length - (body.length % 2));
+    return { kind: "text", text: (bomBe ? view.swap16() : view).toString("utf16le"), transcoded: true };
+  }
+  if (buf.includes(0)) return { kind: "binary", reason: "nul" };
+  const s = buf.toString("utf8");
+  return { kind: "text", text: s.charCodeAt(0) === 0xfeff ? s.slice(1) : s, transcoded: false };
 }
 
 // ─── Pattern helper ──────────────────────────────────────────────────────────
