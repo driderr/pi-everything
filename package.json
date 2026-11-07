@@ -1,6 +1,6 @@
 {
   "name": "pi-everything",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Instant machine-wide file search for the pi coding agent on Windows — native tools (search, content grep, folder size, syntax reference, status) backed by the Everything index via es.exe",
   "keywords": [
     "pi-package",
